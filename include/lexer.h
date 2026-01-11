@@ -20,7 +20,6 @@ typedef enum {
 typedef struct Token {
   TokenType token_type;
   char data[256];
-  int line;
 } Token;
 
 int tokenize_line(char *line, Token *tokens);

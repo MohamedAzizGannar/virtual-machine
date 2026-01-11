@@ -9,7 +9,6 @@ int tokenize_line(char *line, Token *tokens) {
   int pos = 0;
   int len = strlen(line);
   int token_count = 0;
-  printf("Initialized\n");
   // Handle Words
   while (pos < len) {
     while (pos < len && isspace(line[pos]))
@@ -22,7 +21,7 @@ int tokenize_line(char *line, Token *tokens) {
         is_register = 1;
 
       int start = pos;
-      while (pos < len && (isalnum(line[pos] || line[pos] == '_'))) {
+      while (pos < len && (isalnum(line[pos]) || line[pos] == '_')) {
         pos++;
       }
       int word_len = pos - start;
