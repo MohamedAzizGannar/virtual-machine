@@ -1,3 +1,4 @@
+#include "../include//parser.h"
 #include "../include/lexer.h"
 #include <stdio.h>
 int main(int argc, char *argv[]) {
@@ -8,9 +9,9 @@ int main(int argc, char *argv[]) {
   }
   char data[256][256];
   static Token tokens[256][256];
+  static ParsedInstruction parsed_instructions[256];
   int tokens_len[256];
   int i = 0;
-  printf("Success\n");
   while (get_line(data[i], fptr)) {
     i++;
   }
@@ -18,8 +19,13 @@ int main(int argc, char *argv[]) {
   int len = i;
   for (int j = 0; j < len; j++) {
     int count = tokenize_line(data[j], tokens[j]);
-    for (int k = 0; k < count; k++) {
-      printf("%s ", tokens[j][k].data);
+    tokens_len[j] = count;
+    int success = parse_instructions(tokens[j], count, &parsed_instructions[j]);
+    if (success == -1) {
+      printf("Failure Parsing Line %d\n", j);
+      return -1;
+    } else {
+      show_parsed_instruction(&parsed_instructions[j]);
     }
   }
   fclose(fptr);

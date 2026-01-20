@@ -16,10 +16,6 @@ int tokenize_line(char *line, Token *tokens) {
     if (pos >= len)
       break;
     if (isalnum(line[pos])) {
-      int is_register = 0;
-      if (line[pos] == 'r')
-        is_register = 1;
-
       int start = pos;
       while (pos < len && (isalnum(line[pos]) || line[pos] == '_')) {
         pos++;
@@ -29,19 +25,22 @@ int tokenize_line(char *line, Token *tokens) {
       strncpy(tokens[token_count].data, &line[start], word_len);
       tokens[token_count].data[word_len] = '\0';
 
-      if (pos < len && line[pos] == ':') {
-
+      if (pos < len && (line[pos] == ':' || line[pos + 1] == ':')) {
         tokens[token_count].token_type = TOKEN_LABEL;
         pos++;
-      } else if (is_register)
+      } else if (line[start] == 'r' && word_len > 1 &&
+                 isnumber(line[start + 1]))
         tokens[token_count].token_type = TOKEN_REGISTER;
       else {
-        // TODO :Check if OPCODE or IDENTIFIER
-        for (int i = 0; i < OP_CODES_COUNT; i++) {
-          if (strcmp(tokens[token_count].data, OP_CODES[i]) == 0)
+        int is_opcode = 0;
+        for (int i = 0; i < OP_CODES_COUNT) {
+          if (strcmp(tokens[token_count].data, OP_CODES[i]) == 0) {
             tokens[token_count].token_type = TOKEN_OPCODE;
+            is_opcode = 1;
+          }
+          i++;
         }
-        if (!tokens[token_count].token_type)
+        if (!is_opcode)
           tokens[token_count].token_type = TOKEN_IDENTIFIER;
       }
       token_count++;
@@ -63,13 +62,12 @@ int tokenize_line(char *line, Token *tokens) {
       token_count++;
       continue;
     }
-    // Specific Cases
     switch (line[pos]) {
     case ',':
       strcpy(tokens[token_count].data, ",");
       tokens[token_count].token_type = TOKEN_COMMA;
-      pos++;
       token_count++;
+      pos++;
       break;
 
     case '\n':
@@ -89,6 +87,13 @@ int tokenize_line(char *line, Token *tokens) {
       strcpy(tokens[token_count].data, ")");
       token_count++;
       pos++;
+      break;
+    case ';':
+      pos = len;
+      break;
+    default:
+      pos++;
+      break;
     }
   }
   return token_count;
@@ -107,4 +112,33 @@ int get_line(char *data, FILE *fptr) {
     }
   }
   return 1;
+}
+// Debug Function
+const char *token_type_to_string(TokenType type) {
+  switch (type) {
+  case TOKEN_OPCODE:
+    return "TOKEN_OPCODE";
+  case TOKEN_REGISTER:
+    return "TOKEN_REGISTER";
+  case TOKEN_NUMBER:
+    return "TOKEN_NUMBER";
+  case TOKEN_LABEL:
+    return "TOKEN_LABEL";
+  case TOKEN_IDENTIFIER:
+    return "TOKEN_IDENTIFIER";
+  case TOKEN_COMMA:
+    return "TOKEN_COMMA";
+  case TOKEN_NEWLINE:
+    return "TOKEN_NEWLINE";
+  case TOKEN_EOF:
+    return "TOKEN_EOF";
+  case TOKEN_LPAREN:
+    return "TOKEN_LPAREN";
+  case TOKEN_RPAREN:
+    return "TOKEN_RPAREN";
+  case TOKEN_UNKNOWN:
+    return "TOKEN_UNKNOWN";
+  default:
+    return "UNKNOWN_TYPE";
+  }
 }
