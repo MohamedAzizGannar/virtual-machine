@@ -20,12 +20,16 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < len; j++) {
     int count = tokenize_line(data[j], tokens[j]);
     tokens_len[j] = count;
-    int success = parse_instructions(tokens[j], count, &parsed_instructions[j]);
-    if (success == -1) {
-      printf("Failure Parsing Line %d\n", j);
-      return -1;
-    } else {
-      show_parsed_instruction(&parsed_instructions[j]);
+  }
+  for (int j = 0; j < len; j++) {
+    int success =
+        parse_instructions(tokens[j], tokens_len[j], parsed_instructions);
+    parsed_instructions[j].line_number = j;
+  }
+  for (int j = 0; j < len; j++) {
+    int valid = validate_instruction(&parsed_instructions[j]);
+    if (valid == -1) {
+      printf("Error Parsing Line %d \n", parsed_instructions[j].line_number);
     }
   }
   fclose(fptr);
