@@ -29,6 +29,7 @@ int main(int argc, char *argv[]) {
   for (int j = 0; j < len; j++) {
     int valid = validate_instruction(&parsed_instructions[j]);
     if (valid == -1) {
+      printf("Line : %s\n", tokens[j][0].data);
       printf("Error Parsing Line %d \n", parsed_instructions[j].line_number);
     }
   }

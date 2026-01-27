@@ -55,4 +55,3 @@ int check_matching_formats(ParsedInstruction *instruction,
                            InstructionFormat fmt);
 int validate_instruction(ParsedInstruction *instruction);
 #endif // !PARSER_H
-#define PARSER_H

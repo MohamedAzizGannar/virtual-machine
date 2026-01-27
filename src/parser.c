@@ -164,18 +164,20 @@ int check_matching_formats(ParsedInstruction *instruction,
            instruction->operands[0].operand_type == OPERAND_IDENTIFIER;
   case FMT_NO_OPERAND:
     return instruction->operand_count == 0;
+  default:
+    return 0;
   }
 }
 int validate_instruction(ParsedInstruction *instruction) {
   InstructionDefinition *def = NULL;
 
   for (int i = 0; i < instruction_table_size; i++) {
-    if (strcmp(instruction_table[i].name, instruction->opcode) == 0) {
+    if (strcasecmp(instruction_table[i].name, instruction->opcode) == 0) {
       def = &instruction_table[i];
       break;
     }
   }
-  if (!def) {
+  if (def == NULL) {
     fprintf(stderr, "No Matching Format Found For Line %d\n",
             instruction->line_number);
     return -1;
