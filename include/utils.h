@@ -71,6 +71,7 @@ typedef struct ParsedInstruction {
   int line_number;
 
 } ParsedInstruction;
+typedef enum OpType { ARITHMETIC, MEMORY, JUMP, IO, MISC, UNKNOWN } OpType;
 
 InstructionDefinition instruction_table[] = {
     {"add", 0x01, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
@@ -99,11 +100,8 @@ InstructionDefinition instruction_table[] = {
     {"rnd", 0x18, {FMT_REG_IMM}, 1},
     {"hlt", 0x19, {FMT_NO_OPERAND}, 1}};
 
-int lookup_table(SymbolTable *symbol_table, char *label);
-
-int table_contains(SymbolTable *symbol_table, char *label);
-
-int check_if_is_immediate_format(InstructionFormat format);
+int instruction_table_size =
+    sizeof(instruction_table) / sizeof(InstructionDefinition);
 
 const char *operand_type_to_string(OperandType operand);
 
@@ -112,6 +110,14 @@ void print_parsed_instruction(ParsedInstruction *instruction);
 const char *format_to_string(InstructionFormat format);
 
 const char *token_type_to_string(TokenType type);
+
+int lookup_table(SymbolTable *symbol_table, char *label);
+
+int table_contains(SymbolTable *symbol_table, char *label);
+
+int check_is_immediate_format(InstructionFormat format);
+
+OpType find_op_type(char *op_name);
 
 static const char *OP_CODES[] = {
     "ADD", "SUB", "MUL", "DIV", "AND", "OR",  "XOR", "SHR", "LDB",

@@ -2,8 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-int instruction_table_size =
-    sizeof(instruction_table) / sizeof(InstructionDefinition);
 int parse_instructions(Token *tokens, int token_count,
                        ParsedInstruction *parsed_instruction) {
   int pos = 0;

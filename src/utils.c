@@ -1,5 +1,6 @@
 #include "../include/utils.h"
 
+#include <_strings.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -19,7 +20,7 @@ int lookup_table(SymbolTable *symbol_table, char *label) {
   }
   return -1;
 }
-int check_if_is_immediate_format(InstructionFormat format) {
+int check_is_immediate_format(InstructionFormat format) {
   if (format == FMT_REG_REG_IMM || format == FMT_REG_IMM)
     return 1;
   else
@@ -119,4 +120,33 @@ void print_parsed_instruction(ParsedInstruction *instruction) {
     }
   }
   printf("-----------------------------------\n");
+}
+
+OpType find_op_type(char *op_name) {
+  if (strcasecmp(op_name, "ADD") == 0 || strcasecmp(op_name, "SUB") == 0 ||
+      strcasecmp(op_name, "MUL") == 0 || strcasecmp(op_name, "DIV") == 0 ||
+      strcasecmp(op_name, "AND") == 0 || strcasecmp(op_name, "OR") == 0 ||
+      strcasecmp(op_name, "XOR") == 0 || strcasecmp(op_name, "NOR") == 0 ||
+      strcasecmp(op_name, "SHR") == 0) {
+    return ARITHMETIC;
+  } else if (strcasecmp(op_name, "LDB") == 0 ||
+             strcasecmp(op_name, "LDW") == 0 ||
+             strcasecmp(op_name, "LDH") == 0 ||
+             strcasecmp(op_name, "STB") == 0 ||
+             strcasecmp(op_name, "STW") == 0 ||
+             strcasecmp(op_name, "STH") == 0) {
+    return MEMORY;
+
+  } else if (strcasecmp(op_name, "JMP") == 0 ||
+             strcasecmp(op_name, "JZS") == 0 ||
+             strcasecmp(op_name, "JZC") == 0 ||
+             strcasecmp(op_name, "JCS") == 0 ||
+             strcasecmp(op_name, "JCC") == 0 ||
+             strcasecmp(op_name, "JNS") == 0 || strcasecmp(op_name, "JNC")) {
+    return JUMP;
+  } else if (strcasecmp(op_name, "HLT") || strcasecmp(op_name, "RND")) {
+    return MISC;
+  } else {
+    return UNKNOWN;
+  }
 }
