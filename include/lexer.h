@@ -23,6 +23,5 @@ typedef struct Token {
 } Token;
 
 int tokenize_line(char *line, Token *tokens);
-int get_line(char *data, FILE *fptr);
 const char *token_type_to_string(TokenType type);
 #endif

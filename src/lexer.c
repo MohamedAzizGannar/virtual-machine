@@ -99,20 +99,6 @@ int tokenize_line(char *line, Token *tokens) {
   return token_count;
 }
 
-int get_line(char *data, FILE *fptr) {
-  if (!fptr) {
-    fprintf(stderr, "Error: NULL file Pointer\n");
-    return -1;
-  }
-  if (!fgets(data, 256, fptr)) {
-    if (feof(fptr)) {
-      return 0;
-    } else {
-      return -1;
-    }
-  }
-  return 1;
-}
 // Debug Function
 const char *token_type_to_string(TokenType type) {
   switch (type) {

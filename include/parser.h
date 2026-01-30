@@ -2,7 +2,6 @@
 #define PARSER_H
 #include "lexer.h"
 
-#include "opcodes.h"
 typedef enum {
   FMT_REG_REG_REG,
   FMT_REG_REG_IMM,
@@ -21,16 +20,6 @@ typedef struct InstructionDefinition {
   InstructionFormat possible_formats[4];
   int format_count;
 } InstructionDefinition;
-
-typedef struct SymbolEntry {
-  int address;
-  char data[256];
-} SymbolEntry;
-
-typedef struct SymbolTable {
-  SymbolEntry *entries[256];
-  int count;
-} SymbolTable;
 
 typedef enum {
   OPERAND_REGISTER,
@@ -68,8 +57,5 @@ int validate_instruction(ParsedInstruction *instruction);
 void print_parsed_instruction(ParsedInstruction *instruction);
 
 const char *format_to_string(InstructionFormat format);
-
-void get_label_addresses(SymbolTable *symbol_table, Token **tokens,
-                         int line_count);
 
 #endif // !PARSER_H
