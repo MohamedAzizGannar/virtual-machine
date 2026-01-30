@@ -22,10 +22,15 @@ typedef struct InstructionDefinition {
   int format_count;
 } InstructionDefinition;
 
-typedef struct LabelEntry {
+typedef struct SymbolEntry {
   int address;
   char data[256];
-} LabelEntry;
+} SymbolEntry;
+
+typedef struct SymbolTable {
+  SymbolEntry *entries[256];
+  int count;
+} SymbolTable;
 
 typedef enum {
   OPERAND_REGISTER,
@@ -41,11 +46,13 @@ typedef struct Operand {
 } Operand;
 
 typedef struct ParsedInstruction {
+
   InstructionFormat instruction_format;
   Operand operands[3];
   char opcode[256];
   int operand_count;
   int line_number;
+
 } ParsedInstruction;
 
 int parse_instructions(Token *tokens, int token_count,
@@ -61,5 +68,8 @@ int validate_instruction(ParsedInstruction *instruction);
 void print_parsed_instruction(ParsedInstruction *instruction);
 
 const char *format_to_string(InstructionFormat format);
+
+void get_label_addresses(SymbolTable *symbol_table, Token **tokens,
+                         int line_count);
 
 #endif // !PARSER_H

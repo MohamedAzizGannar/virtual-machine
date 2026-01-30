@@ -189,6 +189,18 @@ int validate_instruction(ParsedInstruction *instruction) {
   }
   return 1;
 }
+void get_label_addresses(SymbolTable *symbol_table, Token **tokens,
+                         int line_count) {
+  int curr_address = 0;
+  for (int i = 0; i < line_count; i++) {
+    if (tokens[i][0].token_type == TOKEN_LABEL) {
+      SymbolEntry *newEntry = malloc(sizeof(SymbolEntry));
+      newEntry->address = curr_address;
+      strcpy(newEntry->data, tokens[i][0].data);
+      symbol_table->entries[symbol_table->count++] = newEntry;
+    }
+  }
+}
 const char *format_to_string(InstructionFormat format) {
   switch (format) {
   case FMT_REG_REG_REG:
@@ -220,7 +232,6 @@ void print_parsed_instruction(ParsedInstruction *instruction) {
 
   for (int i = 0; i < instruction->operand_count; i++) {
     printf("  Operand %d: ", i + 1);
-
     switch (instruction->operands[i].operand_type) {
     case OPERAND_REGISTER:
       printf("REGISTER - %s\n", instruction->operands[i].data);
