@@ -15,24 +15,24 @@ int main(int argc, char *argv[]) {
   while (get_line(data[i], fptr)) {
     i++;
   }
-  printf("Get Line Success\n\n");
   int len = i;
   for (int j = 0; j < len; j++) {
-    int count = tokenize_line(data[j], tokens[j]);
-    tokens_len[j] = count;
+    int token_count = tokenize_line(data[j], tokens[j]);
+    tokens_len[j] = token_count;
   }
   for (int j = 0; j < len; j++) {
     int success =
-        parse_instructions(tokens[j], tokens_len[j], parsed_instructions);
+        parse_instructions(tokens[j], tokens_len[j], &parsed_instructions[j]);
     parsed_instructions[j].line_number = j;
   }
+  int all_valid = 1;
   for (int j = 0; j < len; j++) {
     int valid = validate_instruction(&parsed_instructions[j]);
-    if (valid == -1) {
-      printf("Line : %s\n", tokens[j][0].data);
-      printf("Error Parsing Line %d \n", parsed_instructions[j].line_number);
-    }
+    if (!valid)
+      all_valid = -1;
   }
+  if (all_valid)
+    printf("All Instructions Valid\n");
   fclose(fptr);
 
   return 0;

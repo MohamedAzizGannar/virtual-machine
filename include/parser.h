@@ -11,7 +11,8 @@ typedef enum {
   FMT_MEM_REG,
   FMT_REG_IMM,
   FMT_LABEL,
-  FMT_NO_OPERAND
+  FMT_NO_OPERAND,
+  FMT_DEFAULT
 } InstructionFormat;
 
 typedef struct InstructionDefinition {
@@ -49,9 +50,16 @@ typedef struct ParsedInstruction {
 
 int parse_instructions(Token *tokens, int token_count,
                        ParsedInstruction *parsed_instruction);
-void show_parsed_instruction(ParsedInstruction *parsed_instruction);
+
 const char *operand_type_to_string(OperandType operand);
+
 int check_matching_formats(ParsedInstruction *instruction,
                            InstructionFormat fmt);
+
 int validate_instruction(ParsedInstruction *instruction);
+
+void print_parsed_instruction(ParsedInstruction *instruction);
+
+const char *format_to_string(InstructionFormat format);
+
 #endif // !PARSER_H

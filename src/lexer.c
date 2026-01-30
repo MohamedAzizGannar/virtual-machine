@@ -28,15 +28,15 @@ int tokenize_line(char *line, Token *tokens) {
       if (pos < len && (line[pos] == ':' || line[pos + 1] == ':')) {
         tokens[token_count].token_type = TOKEN_LABEL;
         pos++;
-      } else if (line[start] == 'r' && word_len > 1 &&
-                 isnumber(line[start + 1]))
+      } else if (line[start] == 'r' && word_len > 1 && isdigit(line[start + 1]))
         tokens[token_count].token_type = TOKEN_REGISTER;
       else {
         int is_opcode = 0;
         for (int i = 0; i < OP_CODES_COUNT) {
-          if (strcmp(tokens[token_count].data, OP_CODES[i]) == 0) {
+          if (strcasecmp(tokens[token_count].data, OP_CODES[i]) == 0) {
             tokens[token_count].token_type = TOKEN_OPCODE;
             is_opcode = 1;
+            break;
           }
           i++;
         }

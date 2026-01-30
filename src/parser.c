@@ -33,13 +33,15 @@ int parse_instructions(Token *tokens, int token_count,
                        ParsedInstruction *parsed_instruction) {
   int pos = 0;
   parsed_instruction->operand_count = 0;
+  parsed_instruction->instruction_format = FMT_DEFAULT;
 
   if (token_count > 0 && (tokens[pos].token_type == TOKEN_LABEL ||
                           tokens[pos].token_type == TOKEN_IDENTIFIER)) {
     pos++;
   }
   if (tokens[pos].token_type != TOKEN_OPCODE) {
-    fprintf(stderr, "Expected Token OPCODE\n");
+    fprintf(stderr, "Expected Token OPCODE, found %s\n",
+            token_type_to_string(tokens[pos].token_type));
     return -1;
   }
   strcpy(parsed_instruction->opcode, tokens[pos].data);
@@ -54,6 +56,7 @@ int parse_instructions(Token *tokens, int token_count,
       if (pos >= token_count || tokens[pos].token_type != TOKEN_REGISTER) {
         fprintf(stderr, "Expected Register in Parentheses, Found : %s\n",
                 token_type_to_string(tokens[pos].token_type));
+        return -1;
       }
       parsed_instruction->operands[parsed_instruction->operand_count]
           .operand_type = OPERAND_MEM;
@@ -118,16 +121,6 @@ const char *operand_type_to_string(OperandType operand) {
     break;
   }
 }
-void show_parsed_instruction(ParsedInstruction *parsed_instruction) {
-  printf(
-      "OPCODE : %s OP1(Type) : %s(%s) OP2(Type) : %s(%s) OP3(Type): %s(%s)\n",
-      parsed_instruction->opcode, parsed_instruction->operands[0].data,
-      operand_type_to_string(parsed_instruction->operands[0].operand_type),
-      parsed_instruction->operands[1].data,
-      operand_type_to_string(parsed_instruction->operands[1].operand_type),
-      parsed_instruction->operands[2].data,
-      operand_type_to_string(parsed_instruction->operands[2].operand_type));
-}
 int check_matching_formats(ParsedInstruction *instruction,
                            InstructionFormat fmt) {
   switch (fmt) {
@@ -165,7 +158,7 @@ int check_matching_formats(ParsedInstruction *instruction,
   case FMT_NO_OPERAND:
     return instruction->operand_count == 0;
   default:
-    return 0;
+    return -1;
   }
 }
 int validate_instruction(ParsedInstruction *instruction) {
@@ -190,9 +183,60 @@ int validate_instruction(ParsedInstruction *instruction) {
     }
   }
   if (!valid) {
-    fprintf(stderr, "Line %d: Invalide Operands for %s Operator\n",
+    fprintf(stderr, "Line %d: Invalid Operands for %s Operator\n",
             instruction->line_number, instruction->opcode);
     return -1;
   }
   return 1;
+}
+const char *format_to_string(InstructionFormat format) {
+  switch (format) {
+  case FMT_REG_REG_REG:
+    return "REG_REG_REG";
+  case FMT_REG_REG_IMM:
+    return "REG_REG_IMM";
+  case FMT_REG_IMM_IMM:
+    return "REG_IMM_IMM";
+  case FMT_REG_MEM:
+    return "REG_MEM";
+  case FMT_MEM_REG:
+    return "MEM_REG";
+  case FMT_REG_IMM:
+    return "REG_IMM";
+  case FMT_LABEL:
+    return "LABEL";
+  case FMT_NO_OPERAND:
+    return "NO_OPERAND";
+  default:
+    return "UNKNOWN";
+  }
+}
+
+void print_parsed_instruction(ParsedInstruction *instruction) {
+  printf("\nParsed Instruction (Line %d)\n", instruction->line_number);
+  printf("Opcode: %s\n", instruction->opcode);
+  printf("Format: %s\n", format_to_string(instruction->instruction_format));
+  printf("Operand Count: %d\n", instruction->operand_count);
+
+  for (int i = 0; i < instruction->operand_count; i++) {
+    printf("  Operand %d: ", i + 1);
+
+    switch (instruction->operands[i].operand_type) {
+    case OPERAND_REGISTER:
+      printf("REGISTER - %s\n", instruction->operands[i].data);
+      break;
+    case OPERAND_NUMBER:
+      printf("NUMBER - %s\n", instruction->operands[i].data);
+      break;
+    case OPERAND_MEM:
+      printf("MEMORY - (%s)\n", instruction->operands[i].data);
+      break;
+    case OPERAND_IDENTIFIER:
+      printf("IDENTIFIER - %s\n", instruction->operands[i].data);
+      break;
+    default:
+      printf("UNKNOWN\n");
+    }
+  }
+  printf("-----------------------------------\n");
 }
