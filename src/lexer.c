@@ -1,5 +1,4 @@
 #include "../include/lexer.h"
-#include "../include/utils.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -100,31 +99,3 @@ int tokenize_line(char *line, Token *tokens) {
 }
 
 // Debug Function
-const char *token_type_to_string(TokenType type) {
-  switch (type) {
-  case TOKEN_OPCODE:
-    return "TOKEN_OPCODE";
-  case TOKEN_REGISTER:
-    return "TOKEN_REGISTER";
-  case TOKEN_NUMBER:
-    return "TOKEN_NUMBER";
-  case TOKEN_LABEL:
-    return "TOKEN_LABEL";
-  case TOKEN_IDENTIFIER:
-    return "TOKEN_IDENTIFIER";
-  case TOKEN_COMMA:
-    return "TOKEN_COMMA";
-  case TOKEN_NEWLINE:
-    return "TOKEN_NEWLINE";
-  case TOKEN_EOF:
-    return "TOKEN_EOF";
-  case TOKEN_LPAREN:
-    return "TOKEN_LPAREN";
-  case TOKEN_RPAREN:
-    return "TOKEN_RPAREN";
-  case TOKEN_UNKNOWN:
-    return "TOKEN_UNKNOWN";
-  default:
-    return "UNKNOWN_TYPE";
-  }
-}
