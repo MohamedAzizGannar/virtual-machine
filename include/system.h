@@ -6,11 +6,11 @@
 
 int run_system(char *filename);
 
-int read_file(char *filename, char **data, int *line_count);
+int read_file(char *filename, char ***data);
 
 int first_pass(char **data, int line_count, Token **tokens, int *tokens_count,
                SymbolTable *symbol_table);
-int second_pass(char **data, int line_count, Token **tokens, int *tokens_count,
+int second_pass(int line_count, Token **tokens, int *tokens_count,
                 ParsedInstruction *parsedInstrucions,
                 SymbolTable *symbol_table);
 

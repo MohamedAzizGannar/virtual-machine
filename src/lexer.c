@@ -1,5 +1,5 @@
 #include "../include/lexer.h"
-#include "../include/opcodes.h"
+#include "../include/utils.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
