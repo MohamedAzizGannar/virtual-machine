@@ -49,12 +49,11 @@ int first_pass(char **data, int line_count, Token **tokens, int *tokens_count,
     }
     tokens_count[i] = token_count;
     if (token_count > 0 && tokens[i][0].token_type == TOKEN_LABEL) {
-      SymbolEntry *newEntry = malloc(sizeof(SymbolEntry));
-
-      newEntry->address = curr_address;
-      strcpy(newEntry->data, tokens[i][0].data);
-
-      symbol_table->entries[symbol_table->count++] = newEntry;
+      printf("DEBUG: Adding label '%s' at address %d\n", tokens[i][0].data,
+             curr_address);
+      strcpy(symbol_table->entries[symbol_table->count].data,
+             tokens[i][0].data);
+      symbol_table->entries[symbol_table->count++].address = curr_address;
     }
     curr_address += 4;
   }
@@ -70,7 +69,6 @@ int second_pass(int line_count, Token **tokens, int *token_count,
       fprintf(stderr, "Failure Parsing Line %d: Exiting\n", i);
       return -1;
     }
-    print_parsed_instruction(&parsedInstrucions[i]);
     int validate_success = validate_instruction(&parsedInstrucions[i]);
     if (validate_success < 0) {
       fprintf(stderr, "Failure Validating Line %d: Exiting \n", i);
@@ -92,6 +90,7 @@ int second_pass(int line_count, Token **tokens, int *token_count,
                 identifier_address);
       }
     }
+    print_parsed_instruction(&parsedInstrucions[i]);
   }
 
   return 1;
@@ -128,14 +127,13 @@ int run_system(char *filename) {
   ParsedInstruction *parsed_instructions =
       malloc(line_count * sizeof(ParsedInstruction));
 
-  printf("Variables Initialized\n");
   int first_pass_success =
       first_pass(data, line_count, tokens, tokens_count, symbol_table);
   if (first_pass_success < 0) {
     fprintf(stderr, "Failure during the first Pass: Exiting\n");
     return -1;
   }
-  printf("First Pass Success\nStarting Second Pass\n");
+  printf("First Pass Success -> Starting Second Pass\n");
 
   int second_pass_sucess = second_pass(line_count, tokens, tokens_count,
                                        parsed_instructions, symbol_table);
@@ -143,7 +141,8 @@ int run_system(char *filename) {
     fprintf(stderr, "Failure during the second Pass: Exiting\n");
     return -1;
   }
-  printf("Second Pass Success\nStarting Code Generation\n");
+  printf("Second Pass Success -> Starting Code Generation\n");
+  generate_hexadecimal_file(parsed_instructions, line_count, "hexadecimal.txt");
 
   for (int i = 0; i < line_count; i++) {
     free(data[i]);

@@ -1,5 +1,6 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
+#include "generator.h"
 #include "lexer.h"
 #include "parser.h"
 #include "utils.h"

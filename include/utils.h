@@ -53,7 +53,7 @@ typedef struct SymbolEntry {
 } SymbolEntry;
 
 typedef struct SymbolTable {
-  SymbolEntry *entries[256];
+  SymbolEntry entries[256];
   int count;
 } SymbolTable;
 
@@ -81,6 +81,7 @@ extern const int instruction_table_size;
 const char *operand_type_to_string(OperandType operand);
 
 void print_parsed_instruction(ParsedInstruction *instruction);
+void print_symbol_table(SymbolTable *table);
 
 const char *format_to_string(InstructionFormat format);
 

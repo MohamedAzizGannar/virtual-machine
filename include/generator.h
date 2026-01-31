@@ -11,6 +11,6 @@ uint32_t encode_arithmetic_instruction(int opcode,
                                        ParsedInstruction *instruction);
 uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction);
 uint32_t encode_jump_instruction(int opcode, ParsedInstruction *instruction);
-int generate_hexadecimal_file(ParsedInstruction **instructions, int count,
+int generate_hexadecimal_file(ParsedInstruction *instructions, int count,
                               char *target_filename);
 #endif // !GENERATOR_H

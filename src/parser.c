@@ -336,6 +336,7 @@ int validate_instruction(ParsedInstruction *instruction) {
   int valid = -1;
   for (int i = 0; i < def->format_count; i++) {
     if (check_matching_formats(instruction, def->possible_formats[i])) {
+      instruction->instruction_format = def->possible_formats[i];
       valid = 1;
       break;
     }

@@ -1,5 +1,5 @@
-CC = gcc
-CFLAGS = -Wall -Wextra -I./include
+CC = clang
+CFLAGS = -Wall -Wextra -I./include 
 SRC_DIR = src
 OBJ_DIR = obj
 BIN_DIR = bin

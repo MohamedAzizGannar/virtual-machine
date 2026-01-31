@@ -13,12 +13,27 @@ int get_opcode(char *operation_name) {
   return -1;
 }
 int get_register_number(char *register_name) {
-  int num = atoi(++register_name);
-  if (num < 33 && num > -1)
-    return num;
-  return -1;
+  if (!register_name)
+    return -1;
+  if (register_name[0] != 'r' && register_name[0] != 'R')
+    return -1;
+  if (register_name[1] == '\0')
+    return -1;
+
+  char *end;
+  long num = strtol(register_name + 1, &end, 10);
+
+  if (*end != '\0')
+    return -1;
+  if (num < 0 || num > 31)
+    return -1;
+
+  return (int)num;
 }
 int get_immediate_value(char *immediate) {
+  if (!immediate) {
+    return -1;
+  }
   int base = 10;
 
   if (*immediate == '#')
@@ -208,28 +223,30 @@ uint32_t encode_jump_instruction(int opcode, ParsedInstruction *instruction) {
   int rn = 0;
   int imm_bit = -1;
   int src2 = -1;
-  if (instruction->operands[0].has_offset > 0) {
-    if (instruction->operands[0].offset_type == OPERAND_REGISTER) {
+  if (instruction->operands[0].operand_type == OPERAND_NUMBER) {
+    imm_bit = 1;
+    int address = get_immediate_value(instruction->operands[0].data);
+    if (address < 0) {
+      fprintf(stderr, "Negative Label Address\n");
+      return -1;
+    } else if (address > 65535) {
       imm_bit = 0;
-      int rm = get_register_number(instruction->operands[0].offset);
-      if (rm < 0) {
-        fprintf(stderr,
-                "Failure on Line %d during Generation : Invalid Auxiliary "
-                "Register\n",
-                instruction->line_number);
-        return -1;
-      }
-      src2 = rm;
-    } else if (instruction->operands[0].offset_type == OPERAND_NUMBER) {
-      imm_bit = 1;
-      src2 = get_immediate_value(instruction->operands[0].offset) & 0xFFFF;
-    } else {
-      fprintf(
-          stderr,
-          "Failure on Line %d during Generation : Invalid Auxiliary Source \n",
-          instruction->line_number);
+      fprintf(stderr, "Label Address Out Of Bounds\n");
       return -1;
     }
+    src2 = address & 0xFFFF;
+  } else if (instruction->operands[0].operand_type == OPERAND_REGISTER) {
+    imm_bit = 0;
+    int address = get_register_number(instruction->operands[0].data);
+    if (address < 0) {
+      fprintf(stderr, "Negative Label Address\n");
+      return -1;
+    } else if (address > 65535) {
+      imm_bit = 0;
+      fprintf(stderr, "Label Address Out Of Bounds\n");
+      return -1;
+    }
+    src2 = address & 0xFFFF;
   }
   return pack_instruction(opcode, rd, rn, imm_bit, src2);
 }
@@ -253,24 +270,24 @@ uint32_t encode_io_instruction(int opcode, ParsedInstruction *instruction) {
 uint32_t encode_instruction(ParsedInstruction *instruction) {
 
   int opcode = get_opcode(instruction->opcode);
-  if (opcode < 0 || opcode >= 25) {
+  if (opcode < 0 || opcode >= 32) {
     fprintf(stderr, "Unknown Operator Type at Line %d\n",
             instruction->line_number);
     return -1;
   } else if (opcode < 8) {
     // Arithmetic Encoding
     return encode_arithmetic_instruction(opcode, instruction);
-  } else if (opcode > 11 || opcode < 15) {
+  } else if (opcode > 11 && opcode < 15) {
     return encode_load_instruction(opcode, instruction);
 
     // Load Encoding
-  } else if (opcode > 14 || opcode < 18) {
+  } else if (opcode > 14 && opcode < 18) {
     return encode_store_instruction(opcode, instruction);
     // Store Encoding
-  } else if (opcode > 20 || opcode < 28) {
+  } else if (opcode > 20 && opcode < 28) {
     return encode_jump_instruction(opcode, instruction);
     // Jump Encoding
-  } else if (opcode > 27 || opcode < 30) {
+  } else if (opcode > 27 && opcode < 30) {
     return encode_io_instruction(opcode, instruction);
     // IO encoding
   } else if (opcode == 30) {
@@ -282,4 +299,27 @@ uint32_t encode_instruction(ParsedInstruction *instruction) {
   } else {
     return -1;
   }
+}
+int generate_hexadecimal_file(ParsedInstruction *instructions, int count,
+                              char *target_filename) {
+  FILE *file_ptr = fopen(target_filename, "w");
+  if (file_ptr == NULL) {
+    fprintf(stderr, "Failure Creating Target File \n");
+    return -1;
+  }
+  for (int i = 0; i < count; i++) {
+    uint32_t encoded = encode_instruction(&instructions[i]);
+
+    if (encoded == 0xFFFFFFFF) {
+      fprintf(stderr, "Failure Encoding at Line %d\n",
+              instructions[i].line_number);
+      fclose(file_ptr);
+      return -1;
+    }
+
+    fprintf(file_ptr, "%02X%02X%02X%02X\n", (encoded >> 24) & 0xFF,
+            (encoded >> 16) & 0xFF, (encoded >> 8) & 0xFF, encoded & 0xFF);
+  }
+  fclose(file_ptr);
+  return 1;
 }

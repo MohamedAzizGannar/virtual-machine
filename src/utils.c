@@ -36,7 +36,7 @@ const int instruction_table_size =
 
 int table_contains(SymbolTable *symbol_table, char *label) {
   for (int i = 0; i < symbol_table->count; i++) {
-    if (strcmp(symbol_table->entries[i]->data, label) == 0) {
+    if (strcmp(symbol_table->entries[i].data, label) == 0) {
       return 1;
     }
   }
@@ -44,8 +44,8 @@ int table_contains(SymbolTable *symbol_table, char *label) {
 }
 int lookup_table(SymbolTable *symbol_table, char *label) {
   for (int i = 0; i < symbol_table->count; i++) {
-    if (strcmp(symbol_table->entries[i]->data, label) == 0) {
-      return symbol_table->entries[i]->address;
+    if (strcasecmp(symbol_table->entries[i].data, label) == 0) {
+      return symbol_table->entries[i].address;
     }
   }
   return -1;
