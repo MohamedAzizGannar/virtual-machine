@@ -5,31 +5,31 @@
 #include <string.h>
 
 const InstructionDefinition instruction_table[] = {
-    {"add", 0x01, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
-    {"sub", 0x02, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
-    {"mul", 0x03, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
-    {"div", 0x04, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
-    {"and", 0x05, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
-    {"or", 0x06, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
-    {"xor", 0x07, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
-    {"shr", 0x08, {FMT_REG_REG_IMM}, 1},
-    {"ldb", 0x09, {FMT_REG_MEM}, 1},
-    {"ldh", 0x0A, {FMT_REG_MEM}, 1},
-    {"ldw", 0x0B, {FMT_REG_MEM, FMT_REG_IMM}, 2},
-    {"stb", 0x0C, {FMT_MEM_REG}, 1},
-    {"sth", 0x0D, {FMT_MEM_REG}, 1},
-    {"std", 0x0E, {FMT_MEM_REG}, 1},
-    {"jmp", 0x0F, {FMT_LABEL}, 1},
-    {"jzs", 0x10, {FMT_LABEL}, 1},
-    {"jzc", 0x11, {FMT_LABEL}, 1},
-    {"jcs", 0x12, {FMT_LABEL}, 1},
-    {"jcc", 0x13, {FMT_LABEL}, 1},
-    {"jns", 0x14, {FMT_LABEL}, 1},
-    {"jnc", 0x15, {FMT_LABEL}, 1},
-    {"in", 0x16, {FMT_REG_IMM}, 1},
-    {"out", 0x17, {FMT_REG_IMM}, 1},
-    {"rnd", 0x18, {FMT_REG_IMM}, 1},
-    {"hlt", 0x19, {FMT_NO_OPERAND}, 1}};
+    {"or", 0, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"and", 1, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"xor", 2, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"add", 3, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"sub", 4, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
+    {"mul", 5, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"div", 6, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"shr", 7, {FMT_REG_REG_IMM}, 1},
+    {"ldb", 12, {FMT_REG_MEM}, 1},
+    {"ldh", 13, {FMT_REG_MEM}, 1},
+    {"ldw", 14, {FMT_REG_MEM, FMT_REG_IMM}, 2},
+    {"stb", 15, {FMT_MEM_REG}, 1},
+    {"sth", 16, {FMT_MEM_REG}, 1},
+    {"stw", 17, {FMT_MEM_REG}, 1},
+    {"jmp", 21, {FMT_LABEL, FMT_REG}, 2},
+    {"jzs", 22, {FMT_LABEL, FMT_REG}, 2},
+    {"jzc", 23, {FMT_LABEL, FMT_REG}, 2},
+    {"jcs", 24, {FMT_LABEL, FMT_REG}, 2},
+    {"jcc", 25, {FMT_LABEL, FMT_REG}, 2},
+    {"jns", 26, {FMT_LABEL, FMT_REG}, 2},
+    {"jnc", 27, {FMT_LABEL, FMT_REG}, 2},
+    {"in", 28, {FMT_REG}, 1},
+    {"out", 29, {FMT_REG}, 1},
+    {"rnd", 30, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"hlt", 31, {FMT_NO_OPERAND}, 1}};
 
 const int instruction_table_size =
     sizeof(instruction_table) / sizeof(InstructionDefinition);
@@ -153,33 +153,4 @@ void print_parsed_instruction(ParsedInstruction *instruction) {
     }
   }
   printf("-----------------------------------\n");
-}
-
-OpType find_op_type(char *op_name) {
-  if (strcasecmp(op_name, "ADD") == 0 || strcasecmp(op_name, "SUB") == 0 ||
-      strcasecmp(op_name, "MUL") == 0 || strcasecmp(op_name, "DIV") == 0 ||
-      strcasecmp(op_name, "AND") == 0 || strcasecmp(op_name, "OR") == 0 ||
-      strcasecmp(op_name, "XOR") == 0 || strcasecmp(op_name, "NOR") == 0 ||
-      strcasecmp(op_name, "SHR") == 0) {
-    return ARITHMETIC;
-  } else if (strcasecmp(op_name, "LDB") == 0 ||
-             strcasecmp(op_name, "LDW") == 0 ||
-             strcasecmp(op_name, "LDH") == 0 ||
-             strcasecmp(op_name, "STB") == 0 ||
-             strcasecmp(op_name, "STW") == 0 ||
-             strcasecmp(op_name, "STH") == 0) {
-    return MEMORY;
-
-  } else if (strcasecmp(op_name, "JMP") == 0 ||
-             strcasecmp(op_name, "JZS") == 0 ||
-             strcasecmp(op_name, "JZC") == 0 ||
-             strcasecmp(op_name, "JCS") == 0 ||
-             strcasecmp(op_name, "JCC") == 0 ||
-             strcasecmp(op_name, "JNS") == 0 || strcasecmp(op_name, "JNC")) {
-    return JUMP;
-  } else if (strcasecmp(op_name, "HLT") || strcasecmp(op_name, "RND")) {
-    return MISC;
-  } else {
-    return UNKNOWN;
-  }
 }

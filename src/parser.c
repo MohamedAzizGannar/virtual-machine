@@ -89,6 +89,7 @@ int parse_load_instruction(Token *tokens, int token_count, int start_pos,
   } else {
     parsed_instruction->operands[2].has_offset = 0;
   }
+  parsed_instruction->instruction_format = FMT_REG_MEM;
   return 1;
 }
 int parse_store_instruction(Token *tokens, int token_count, int start_pos,

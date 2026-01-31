@@ -27,6 +27,7 @@ typedef enum {
   FMT_REG_MEM,
   FMT_MEM_REG,
   FMT_REG_IMM,
+  FMT_REG,
   FMT_LABEL,
   FMT_NO_OPERAND,
   FMT_DEFAULT
@@ -74,7 +75,6 @@ typedef struct ParsedInstruction {
   int line_number;
 
 } ParsedInstruction;
-typedef enum OpType { ARITHMETIC, MEMORY, JUMP, IO, MISC, UNKNOWN } OpType;
 extern const InstructionDefinition instruction_table[];
 extern const int instruction_table_size;
 
@@ -91,8 +91,6 @@ int lookup_table(SymbolTable *symbol_table, char *label);
 int table_contains(SymbolTable *symbol_table, char *label);
 
 int check_is_immediate_format(InstructionFormat format);
-
-OpType find_op_type(char *op_name);
 
 static const char *OP_CODES[] = {
     "ADD", "SUB", "MUL", "DIV", "AND", "OR",  "XOR", "SHR", "LDB",
