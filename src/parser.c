@@ -1,5 +1,6 @@
 #include "../include/parser.h"
 #include <_strings.h>
+#include <curses.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -73,11 +74,11 @@ int parse_load_instruction(Token *tokens, int token_count, int start_pos,
     if (tokens[pos].token_type == TOKEN_REGISTER) {
       parsed_instruction->operands[1].has_offset = 1;
       strcpy(parsed_instruction->operands[1].offset, tokens[pos].data);
-      parsed_instruction->operands[1].operand_type = OPERAND_REGISTER;
+      parsed_instruction->operands[1].offset_type = OPERAND_REGISTER;
     } else if (tokens[pos].token_type == TOKEN_NUMBER) {
       parsed_instruction->operands[1].has_offset = 1;
       strcpy(parsed_instruction->operands[1].offset, tokens[pos].data);
-      parsed_instruction->operands[1].operand_type = OPERAND_NUMBER;
+      parsed_instruction->operands[1].offset_type = OPERAND_NUMBER;
     } else if (tokens[pos].token_type == TOKEN_COMMA) {
       printf("Warning, Found Comma After Register\n");
     } else {
@@ -129,16 +130,17 @@ int parse_store_instruction(Token *tokens, int token_count, int start_pos,
             token_type_to_string(tokens[pos].token_type));
     return -1;
   }
+  pos++;
   if (pos < token_count && tokens[pos].token_type != TOKEN_NEWLINE &&
       tokens[pos].token_type != TOKEN_EOF) {
     if (tokens[pos].token_type == TOKEN_REGISTER) {
-      parsed_instruction->operands[1].has_offset = 1;
-      strcpy(parsed_instruction->operands[1].offset, tokens[pos].data);
-      parsed_instruction->operands[1].operand_type = OPERAND_REGISTER;
+      parsed_instruction->operands[0].has_offset = 1;
+      strcpy(parsed_instruction->operands[0].offset, tokens[pos].data);
+      parsed_instruction->operands[0].offset_type = OPERAND_REGISTER;
     } else if (tokens[pos].token_type == TOKEN_NUMBER) {
-      parsed_instruction->operands[1].has_offset = 1;
-      strcpy(parsed_instruction->operands[1].offset, tokens[pos].data);
-      parsed_instruction->operands[1].operand_type = OPERAND_NUMBER;
+      parsed_instruction->operands[0].has_offset = 1;
+      strcpy(parsed_instruction->operands[0].offset, tokens[pos].data);
+      parsed_instruction->operands[0].offset_type = OPERAND_NUMBER;
     } else if (tokens[pos].token_type == TOKEN_COMMA) {
       printf("Warning, Found Comma After Register\n");
     } else {
@@ -147,8 +149,35 @@ int parse_store_instruction(Token *tokens, int token_count, int start_pos,
       return -1;
     }
   } else {
-    parsed_instruction->operands[2].has_offset = 0;
+    parsed_instruction->operands[0].has_offset = 0;
   }
+  pos++;
+  if (pos >= token_count) {
+    fprintf(stderr, "Expected Comma After Register:Exiting \n");
+    return -1;
+  }
+  if (tokens[pos].token_type != TOKEN_COMMA) {
+    fprintf(stderr, "Expected Comma After Register, Found %s",
+            token_type_to_string(tokens[pos].token_type));
+    return -1;
+  }
+  pos++;
+  if (pos >= token_count) {
+    fprintf(stderr, "Expected Register Token :Exiting \n");
+    return -1;
+  }
+  if (tokens[pos].token_type != TOKEN_REGISTER) {
+    fprintf(stderr, "Expected Destination Register, Found %s",
+            token_type_to_string(tokens[pos].token_type));
+    return -1;
+  }
+  parsed_instruction->operands[1].operand_type = OPERAND_REGISTER;
+  strcpy(parsed_instruction->operands[1].data, tokens[pos].data);
+  parsed_instruction->operand_count = 2;
+  pos++;
+
+  parsed_instruction->instruction_format = FMT_MEM_REG;
+  return 1;
 }
 int parse_instructions(Token *tokens, int token_count,
                        ParsedInstruction *parsed_instruction) {
@@ -166,15 +195,36 @@ int parse_instructions(Token *tokens, int token_count,
     return -1;
   }
   strcpy(parsed_instruction->opcode, tokens[pos].data);
+  pos++;
   if (strcasecmp(parsed_instruction->opcode, "ldb") == 0 ||
       strcasecmp(parsed_instruction->opcode, "ldh") == 0 ||
       strcasecmp(parsed_instruction->opcode, "ldw") == 0) {
+    int parse_sucess =
+        parse_load_instruction(tokens, token_count, pos, parsed_instruction);
+    if (parse_sucess > 0) {
+      return 1;
+
+    } else {
+      fprintf(stderr, "Failure Parsing Load Insutruction At Line %d: Exiting\n",
+              parsed_instruction->line_number);
+      return -1;
+    }
   }
   if (strcasecmp(parsed_instruction->opcode, "stb") == 0 ||
       strcasecmp(parsed_instruction->opcode, "sth") == 0 ||
       strcasecmp(parsed_instruction->opcode, "stw") == 0) {
+    int parse_sucess =
+        parse_store_instruction(tokens, token_count, pos, parsed_instruction);
+    if (parse_sucess > 0) {
+      return 1;
+
+    } else {
+      fprintf(stderr,
+              "Failure Parsing Store Insutruction At Line %d: Exiting\n",
+              parsed_instruction->line_number);
+      return -1;
+    }
   }
-  pos++;
   while (pos < token_count && tokens[pos].token_type != TOKEN_NEWLINE) {
     if (tokens[pos].token_type == TOKEN_COMMA) {
       pos++;
@@ -269,7 +319,7 @@ int check_matching_formats(ParsedInstruction *instruction,
   }
 }
 int validate_instruction(ParsedInstruction *instruction) {
-  InstructionDefinition *def = NULL;
+  const InstructionDefinition *def = NULL;
 
   for (int i = 0; i < instruction_table_size; i++) {
     if (strcasecmp(instruction_table[i].name, instruction->opcode) == 0) {
@@ -292,6 +342,7 @@ int validate_instruction(ParsedInstruction *instruction) {
   if (valid < 0) {
     fprintf(stderr, "Line %d: Invalid Operands for %s Operator\n",
             instruction->line_number, instruction->opcode);
+    print_parsed_instruction(instruction);
     return -1;
   }
   return 1;

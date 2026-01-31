@@ -1,7 +1,7 @@
 #include "../include/system.h"
 #include <_string.h>
 #include <stdio.h>
-
+#include <stdlib.h>
 int read_file(char *filename, char ***data) {
   FILE *file_ptr = fopen(filename, "r");
   if (!file_ptr) {
@@ -70,6 +70,7 @@ int second_pass(int line_count, Token **tokens, int *token_count,
       fprintf(stderr, "Failure Parsing Line %d: Exiting\n", i);
       return -1;
     }
+    print_parsed_instruction(&parsedInstrucions[i]);
     int validate_success = validate_instruction(&parsedInstrucions[i]);
     if (validate_success < 0) {
       fprintf(stderr, "Failure Validating Line %d: Exiting \n", i);

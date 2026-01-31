@@ -4,6 +4,36 @@
 #include <stdio.h>
 #include <string.h>
 
+const InstructionDefinition instruction_table[] = {
+    {"add", 0x01, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
+    {"sub", 0x02, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 3},
+    {"mul", 0x03, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"div", 0x04, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"and", 0x05, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"or", 0x06, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"xor", 0x07, {FMT_REG_REG_REG, FMT_REG_REG_IMM}, 2},
+    {"shr", 0x08, {FMT_REG_REG_IMM}, 1},
+    {"ldb", 0x09, {FMT_REG_MEM}, 1},
+    {"ldh", 0x0A, {FMT_REG_MEM}, 1},
+    {"ldw", 0x0B, {FMT_REG_MEM, FMT_REG_IMM}, 2},
+    {"stb", 0x0C, {FMT_MEM_REG}, 1},
+    {"sth", 0x0D, {FMT_MEM_REG}, 1},
+    {"std", 0x0E, {FMT_MEM_REG}, 1},
+    {"jmp", 0x0F, {FMT_LABEL}, 1},
+    {"jzs", 0x10, {FMT_LABEL}, 1},
+    {"jzc", 0x11, {FMT_LABEL}, 1},
+    {"jcs", 0x12, {FMT_LABEL}, 1},
+    {"jcc", 0x13, {FMT_LABEL}, 1},
+    {"jns", 0x14, {FMT_LABEL}, 1},
+    {"jnc", 0x15, {FMT_LABEL}, 1},
+    {"in", 0x16, {FMT_REG_IMM}, 1},
+    {"out", 0x17, {FMT_REG_IMM}, 1},
+    {"rnd", 0x18, {FMT_REG_IMM}, 1},
+    {"hlt", 0x19, {FMT_NO_OPERAND}, 1}};
+
+const int instruction_table_size =
+    sizeof(instruction_table) / sizeof(InstructionDefinition);
+
 int table_contains(SymbolTable *symbol_table, char *label) {
   for (int i = 0; i < symbol_table->count; i++) {
     if (strcmp(symbol_table->entries[i]->data, label) == 0) {
@@ -117,6 +147,9 @@ void print_parsed_instruction(ParsedInstruction *instruction) {
       break;
     default:
       printf("UNKNOWN\n");
+    }
+    if (instruction->operands[i].has_offset) {
+      printf("OFFSET - %s\n", instruction->operands[i].offset);
     }
   }
   printf("-----------------------------------\n");

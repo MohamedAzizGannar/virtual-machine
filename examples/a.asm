@@ -1,5 +1,6 @@
 start: ADD r1, r2 ,r3 ;Hello
         SUB r1, r2 , #45
         MUL r1, r2, r3
-        LDB r1, (r2) 
+        LDB r1, (r2)#23 
+        STB (r2)r4, r1
         JMP start
