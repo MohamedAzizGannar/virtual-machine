@@ -70,3 +70,12 @@ uint32_t encode_instruction(ParsedInstruction *instruction) {
     break;
   }
 }
+uint32_t pack_instruction(int opcode, int rd, int rn, int imm, int src2) {
+  uint32_t res = 0;
+  res |= (opcode & 0x1F) << 27;
+  res |= (rd & 0x1F) << 22;
+  res |= (rn & 0x1F) << 17;
+  res |= (imm & 0x1) << 16;
+  res |= (src2 & 0xFFFF);
+  return res;
+}

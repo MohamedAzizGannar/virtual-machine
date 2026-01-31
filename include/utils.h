@@ -60,6 +60,9 @@ typedef struct Operand {
   OperandType operand_type;
   char data[256];
   InstructionFormat format;
+  int has_offset;
+  char offset[256];
+  OperandType offset_type;
 } Operand;
 
 typedef struct ParsedInstruction {
