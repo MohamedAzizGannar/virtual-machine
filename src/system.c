@@ -60,38 +60,51 @@ int first_pass(char **data, int line_count, Token **tokens, int *tokens_count,
   return 1;
 }
 int second_pass(int line_count, Token **tokens, int *token_count,
-                ParsedInstruction *parsedInstrucions,
-                SymbolTable *symbol_table) {
+                ParsedInstruction *parsedInstrucions, SymbolTable *symbol_table,
+                int *instruction_count_out) {
+  int instruction_count = 0;
   for (int i = 0; i < line_count; i++) {
-    int parse_success =
-        parse_instructions(tokens[i], token_count[i], &parsedInstrucions[i]);
+    if (token_count[i] == 0 ||
+        (token_count[i] == 1 && tokens[i][0].token_type == TOKEN_NEWLINE) ||
+        (token_count[i] == 1 && tokens[i][0].token_type == TOKEN_LABEL)) {
+      continue;
+    }
+    int parse_success = parse_instructions(
+        tokens[i], token_count[i], &parsedInstrucions[instruction_count]);
     if (parse_success < 0) {
       fprintf(stderr, "Failure Parsing Line %d: Exiting\n", i);
       return -1;
     }
-    int validate_success = validate_instruction(&parsedInstrucions[i]);
+    parsedInstrucions[instruction_count].line_number = i;
+    int validate_success =
+        validate_instruction(&parsedInstrucions[instruction_count]);
     if (validate_success < 0) {
       fprintf(stderr, "Failure Validating Line %d: Exiting \n", i);
       return -1;
     }
     for (int j = 0; j < parsedInstrucions[i].operand_count; j++) {
-      if (parsedInstrucions[i].operands[j].operand_type == OPERAND_IDENTIFIER) {
+      if (parsedInstrucions[instruction_count].operands[j].operand_type ==
+          OPERAND_IDENTIFIER) {
         int identifier_address =
-            lookup_table(symbol_table, parsedInstrucions[i].operands[j].data);
+            lookup_table(symbol_table,
+                         parsedInstrucions[instruction_count].operands[j].data);
         if (identifier_address < 0) {
           fprintf(stderr,
                   "No Matching Label found for %s Identifier on Line %d: "
                   "Exiting \n",
-                  parsedInstrucions[i].operands[j].data, i);
+                  parsedInstrucions[instruction_count].operands[j].data, i);
           return -1;
         }
-        parsedInstrucions[i].operands[j].operand_type = OPERAND_NUMBER;
-        sprintf(parsedInstrucions[i].operands[j].data, "%d",
+        parsedInstrucions[instruction_count].operands[j].operand_type =
+            OPERAND_NUMBER;
+        sprintf(parsedInstrucions[instruction_count].operands[j].data, "%d",
                 identifier_address);
       }
     }
-    print_parsed_instruction(&parsedInstrucions[i]);
+    print_parsed_instruction(&parsedInstrucions[instruction_count]);
+    instruction_count++;
   }
+  *instruction_count_out = instruction_count;
 
   return 1;
 }
@@ -135,14 +148,21 @@ int run_system(char *filename) {
   }
   printf("First Pass Success -> Starting Second Pass\n");
 
-  int second_pass_sucess = second_pass(line_count, tokens, tokens_count,
-                                       parsed_instructions, symbol_table);
+  int instruction_count = 0;
+  int second_pass_sucess =
+      second_pass(line_count, tokens, tokens_count, parsed_instructions,
+                  symbol_table, &instruction_count);
   if (second_pass_sucess < 0) {
     fprintf(stderr, "Failure during the second Pass: Exiting\n");
     return -1;
   }
   printf("Second Pass Success -> Starting Code Generation\n");
-  generate_hexadecimal_file(parsed_instructions, line_count, "hexadecimal.txt");
+
+  int generation_success = generate_hexadecimal_file(
+      parsed_instructions, instruction_count, "hexadecimal.txt");
+  if (generation_success > 0) {
+    printf("Generation Success\n");
+  }
 
   for (int i = 0; i < line_count; i++) {
     free(data[i]);

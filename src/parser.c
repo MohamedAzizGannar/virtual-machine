@@ -310,6 +310,9 @@ int check_matching_formats(ParsedInstruction *instruction,
     return instruction->operand_count == 2 &&
            instruction->operands[0].operand_type == OPERAND_REGISTER &&
            instruction->operands[1].operand_type == OPERAND_NUMBER;
+  case FMT_REG:
+    return instruction->operand_count == 1 &&
+           instruction->operands[0].operand_type == OPERAND_REGISTER;
   case FMT_LABEL:
     return instruction->operand_count == 1 &&
            instruction->operands[0].operand_type == OPERAND_IDENTIFIER;
@@ -329,8 +332,8 @@ int validate_instruction(ParsedInstruction *instruction) {
     }
   }
   if (def == NULL) {
-    fprintf(stderr, "No Matching Format Found For Line %d\n",
-            instruction->line_number);
+    fprintf(stderr, "No Matching Format Found For Line %d: %s\n",
+            instruction->line_number, instruction->opcode);
     return -1;
   }
   int valid = -1;

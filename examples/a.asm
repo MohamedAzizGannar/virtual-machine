@@ -1,6 +1,7 @@
-ici: in r1
-     jzs fin
-     sub r1, r0 ,r1
-     out r1
-     jmp ici
-fin: hlt
+add r1, r0, #1
+add r2, r0, #10
+
+hello:
+rnd r3, r1, r2
+out r3
+hlt
