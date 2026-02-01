@@ -279,37 +279,73 @@ int simulate(char *filename) {
     }
     case 22: { // jzs
       if (Z) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
     case 23: { // jzc
       if (!Z) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
     case 24: { // jcs
       if (C) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
     case 25: { // jcc
       if (!C) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
     case 26: { // jns
       if (N) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
     case 27: { // jnc
       if (!N) {
-        PC = r[rd];
+        int32_t address;
+        if (S == 0) {
+          address = r[src2];
+        } else {
+          address = imm;
+        }
+        PC = address;
       }
       break;
     }
@@ -342,4 +378,5 @@ int simulate(char *filename) {
     }
     r[0] = 0;
   }
+  return 1;
 }
