@@ -3,6 +3,7 @@
 #include "generator.h"
 #include "lexer.h"
 #include "parser.h"
+#include "simulator.h"
 #include "utils.h"
 
 int run_system(char *filename);

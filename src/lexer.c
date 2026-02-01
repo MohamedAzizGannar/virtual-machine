@@ -8,7 +8,6 @@ int tokenize_line(char *line, Token *tokens) {
   int pos = 0;
   int len = strlen(line);
   int token_count = 0;
-  // Handle Words
   while (pos < len) {
     while (pos < len && isspace(line[pos]))
       pos++;
@@ -45,18 +44,42 @@ int tokenize_line(char *line, Token *tokens) {
       token_count++;
       continue;
     }
-    // Handle Numbers
-    if (isdigit(line[pos]) || line[pos] == '#') {
+    if (isdigit(line[pos]) || line[pos] == '#' || line[pos] == '-') {
+      int is_negative = -1;
+      int is_hex = -1;
       if (line[pos] == '#')
         pos++;
 
-      int start = pos;
-      while (pos < len &&
-             (isdigit(line[pos]) || line[pos] == 'x' || line[pos] == 'X'))
+      if (pos < len && line[pos]) {
+        is_hex = 1;
         pos++;
+      }
+      int start = pos;
+      if (!is_hex && pos < len && line[pos] == '-') {
+        is_negative = 1;
+        pos++;
+      }
+      if (is_hex < 0) {
+
+        while (pos < len &&
+               (isxdigit(line[pos]) || line[pos] == 'x' || line[pos] == 'X'))
+          pos++;
+      } else {
+
+        while (pos < len &&
+               (isdigit(line[pos]) || line[pos] == 'x' || line[pos] == 'X'))
+          pos++;
+      }
       int num_len = pos - start;
-      strncpy(tokens[token_count].data, &line[start], num_len);
-      tokens[token_count].data[num_len] = '\0';
+      if (is_negative < 0) {
+
+        strncpy(tokens[token_count].data, &line[start], num_len);
+        tokens[token_count].data[num_len] = '\0';
+      } else {
+        tokens[token_count].data[0] = '-';
+        strncpy(tokens[token_count].data + 1, &line[start], num_len);
+        tokens[token_count].data[num_len + 1] = '\0';
+      }
       tokens[token_count].token_type = TOKEN_NUMBER;
       token_count++;
       continue;
@@ -97,5 +120,3 @@ int tokenize_line(char *line, Token *tokens) {
   }
   return token_count;
 }
-
-// Debug Function

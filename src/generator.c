@@ -1,10 +1,9 @@
 #include "../include/generator.h"
 #include <_string.h>
+#include <errno.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-
 int get_opcode(char *operation_name) {
   for (int i = 0; i < instruction_table_size; i++) {
     if (strcasecmp(operation_name, instruction_table[i].name) == 0)
@@ -50,17 +49,15 @@ int get_immediate_value(char *immediate) {
     fprintf(stderr, "No Digits after h/H: Exiting\n");
     return -1;
   }
-  int errno = 0;
+  errno = 0;
   char *end;
   int val = strtol(immediate, &end, base);
 
-  // Check conversion errors
   if (errno != 0 || *end != '\0') {
     fprintf(stderr, "Invalid Immediate Value: %s\n", immediate);
     return -1;
   }
 
-  // Bounds check (16-bit signed/unsigned range)
   if (val < -32768 || val > 65535) {
     fprintf(stderr, "Immediate Value Out of Bounds: %d\n", val);
     return -1;
@@ -81,7 +78,7 @@ uint32_t encode_arithmetic_instruction(int opcode,
                                        ParsedInstruction *instruction) {
 
   int rd = get_register_number(instruction->operands[0].data);
-  if (rd < 0 || rd > 32) {
+  if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -90,7 +87,7 @@ uint32_t encode_arithmetic_instruction(int opcode,
     return -1;
   }
   int rn = get_register_number(instruction->operands[1].data);
-  if (rn < 0 || rn > 32) {
+  if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -126,7 +123,7 @@ uint32_t encode_arithmetic_instruction(int opcode,
 }
 uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
   int rd = get_register_number(instruction->operands[0].data);
-  if (rd < 0 || rd > 32) {
+  if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -135,7 +132,7 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
     return -1;
   }
   int rn = get_register_number(instruction->operands[1].data);
-  if (rn < 0 || rn > 32) {
+  if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -173,7 +170,7 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
 uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
   int rd = get_register_number(instruction->operands[0].data);
 
-  if (rd < 0 || rd > 32) {
+  if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -182,7 +179,7 @@ uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
     return -1;
   }
   int rn = get_register_number(instruction->operands[1].data);
-  if (rn < 0 || rn > 32) {
+  if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
             "Failure on Line %d during Generation : Invalid Source Register "
@@ -275,27 +272,20 @@ uint32_t encode_instruction(ParsedInstruction *instruction) {
             instruction->line_number);
     return -1;
   } else if (opcode < 8) {
-    // Arithmetic Encoding
     return encode_arithmetic_instruction(opcode, instruction);
   } else if (opcode > 11 && opcode < 15) {
     return encode_load_instruction(opcode, instruction);
 
-    // Load Encoding
   } else if (opcode > 14 && opcode < 18) {
     return encode_store_instruction(opcode, instruction);
-    // Store Encoding
   } else if (opcode > 20 && opcode < 28) {
     return encode_jump_instruction(opcode, instruction);
-    // Jump Encoding
   } else if (opcode > 27 && opcode < 30) {
     return encode_io_instruction(opcode, instruction);
-    // IO encoding
   } else if (opcode == 30) {
     return encode_arithmetic_instruction(opcode, instruction);
-    // RND Encoding
   } else if (opcode == 31) {
     return pack_instruction(opcode, 0, 0, 0, 0);
-    // hlt encoding
   } else {
     return -1;
   }
@@ -303,7 +293,7 @@ uint32_t encode_instruction(ParsedInstruction *instruction) {
 int generate_hexadecimal_file(ParsedInstruction *instructions, int count,
                               char *target_filename) {
   FILE *file_ptr = fopen(target_filename, "w");
-  if (file_ptr == NULL) {
+  if (!file_ptr) {
     fprintf(stderr, "Failure Creating Target File \n");
     return -1;
   }

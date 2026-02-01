@@ -1,7 +1,7 @@
 #include "../include/system.h"
-#include <_string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 int read_file(char *filename, char ***data) {
   FILE *file_ptr = fopen(filename, "r");
   if (!file_ptr) {
@@ -9,7 +9,7 @@ int read_file(char *filename, char ***data) {
             filename);
     return -1;
   }
-  printf("Succexs Loading File\n");
+  printf("Success Loading File\n");
   int line_count = 0;
   char line_buffer[256];
   while (fgets(line_buffer, sizeof(line_buffer), file_ptr)) {
@@ -26,7 +26,7 @@ int read_file(char *filename, char ***data) {
   while (fgets(line_buffer, sizeof(line_buffer), file_ptr)) {
     (*data)[i] = strdup(line_buffer);
     if (!(*data)[i]) {
-      fprintf(stderr, "data strdup failed at line %d\n", i);
+      fprintf(stderr, "Data strdup Failed At Line : %d\n", i);
       for (int j = 0; j < i; j++) {
         free((*data)[j]);
       }
@@ -159,9 +159,16 @@ int run_system(char *filename) {
   printf("Second Pass Success -> Starting Code Generation\n");
 
   int generation_success = generate_hexadecimal_file(
-      parsed_instructions, instruction_count, "hexadecimal.txt");
+      parsed_instructions, instruction_count, "hexa.txt");
   if (generation_success > 0) {
-    printf("Generation Success\n");
+    printf("Generation Success->Starting Simulation\n");
+  }
+  int simulate_success = simulate("hexa.txt");
+  if (simulate_success > 0) {
+    printf("Simulation Success\n");
+  } else {
+    fprintf(stderr, "Failure During Simulation : Exiting\n");
+    return -1;
   }
 
   for (int i = 0; i < line_count; i++) {
