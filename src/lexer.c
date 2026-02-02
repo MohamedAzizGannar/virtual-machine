@@ -47,18 +47,18 @@ int tokenize_line(char *line, Token *tokens) {
     if (isdigit(line[pos]) || line[pos] == '#' || line[pos] == '-') {
       int is_negative = -1;
       int is_hex = -1;
-      if (line[pos] == '#')
+      if (pos < len && line[pos] == '#')
         pos++;
 
-      if (pos < len && line[pos]) {
+      if (pos < len && line[pos] == 'h') {
         is_hex = 1;
         pos++;
       }
-      int start = pos;
-      if (!is_hex && pos < len && line[pos] == '-') {
+      if (is_hex < 0 && pos < len && line[pos] == '-') {
         is_negative = 1;
         pos++;
       }
+      int start = pos;
       if (is_hex < 0) {
 
         while (pos < len &&
@@ -66,8 +66,7 @@ int tokenize_line(char *line, Token *tokens) {
           pos++;
       } else {
 
-        while (pos < len &&
-               (isdigit(line[pos]) || line[pos] == 'x' || line[pos] == 'X'))
+        while (pos < len && (isdigit(line[pos])))
           pos++;
       }
       int num_len = pos - start;

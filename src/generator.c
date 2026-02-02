@@ -11,7 +11,7 @@ int get_opcode(char *operation_name) {
   }
   return -1;
 }
-int get_register_number(char *register_name) {
+int get_register_number(char *register_name, int *out) {
   if (!register_name)
     return -1;
   if (register_name[0] != 'r' && register_name[0] != 'R')
@@ -27,9 +27,10 @@ int get_register_number(char *register_name) {
   if (num < 0 || num > 31)
     return -1;
 
-  return (int)num;
+  *out = (int)num;
+  return 1;
 }
-int get_immediate_value(char *immediate) {
+int get_immediate_value(char *immediate, int *out) {
   if (!immediate) {
     return -1;
   }
@@ -53,17 +54,17 @@ int get_immediate_value(char *immediate) {
   char *end;
   int val = strtol(immediate, &end, base);
 
-  if (errno != 0 || *end != '\0') {
-    fprintf(stderr, "Invalid Immediate Value: %s\n", immediate);
+  if (errno != 0 || end == immediate || *end != '\0') {
+    fprintf(stderr, "Invalid immediate value: %s\n", immediate);
     return -1;
   }
-
   if (val < -32768 || val > 65535) {
     fprintf(stderr, "Immediate Value Out of Bounds: %d\n", val);
     return -1;
   }
 
-  return (int)(val & 0xFFFF);
+  *out = (int)(val & 0xFFFF);
+  return 1;
 }
 uint32_t pack_instruction(int opcode, int rd, int rn, int imm, int src2) {
   uint32_t res = 0;
@@ -77,7 +78,11 @@ uint32_t pack_instruction(int opcode, int rd, int rn, int imm, int src2) {
 uint32_t encode_arithmetic_instruction(int opcode,
                                        ParsedInstruction *instruction) {
 
-  int rd = get_register_number(instruction->operands[0].data);
+  int rd;
+  int rd_success = get_register_number(instruction->operands[0].data, &rd);
+  if (rd_success < 0) {
+    return -1;
+  }
   if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
@@ -86,7 +91,11 @@ uint32_t encode_arithmetic_instruction(int opcode,
             instruction->line_number);
     return -1;
   }
-  int rn = get_register_number(instruction->operands[1].data);
+  int rn;
+  int rn_success = get_register_number(instruction->operands[1].data, &rn);
+  if (rn_success < 0) {
+    return -1;
+  }
   if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
@@ -99,7 +108,15 @@ uint32_t encode_arithmetic_instruction(int opcode,
   int imm_bit = -1;
   if (instruction->operands[2].operand_type == OPERAND_REGISTER) {
     imm_bit = 0;
-    int rm = get_register_number(instruction->operands[2].data);
+    int rm;
+    int rm_success = get_register_number(instruction->operands[2].data, &rm);
+    if (rm_success < 0) {
+      fprintf(stderr,
+              "Failure on Line %d during Generation : Invalid Auxiliary "
+              "Register Number\n",
+              instruction->line_number);
+      return -1;
+    }
     if (rm < 0) {
       fprintf(stderr,
               "Failure on Line %d during Generation : Invalid Auxiliary "
@@ -111,7 +128,12 @@ uint32_t encode_arithmetic_instruction(int opcode,
   } else if (instruction->operands[2].operand_type == OPERAND_NUMBER) {
     imm_bit = 1;
 
-    src2 = get_immediate_value(instruction->operands[2].data) & 0xFFFF;
+    int src2_success =
+        get_immediate_value(instruction->operands[2].data, &src2) & 0xFFFF;
+    if (src2_success < 0) {
+      return -1;
+    }
+
   } else {
     fprintf(
         stderr,
@@ -122,7 +144,11 @@ uint32_t encode_arithmetic_instruction(int opcode,
   return pack_instruction(opcode, rd, rn, imm_bit, src2);
 }
 uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
-  int rd = get_register_number(instruction->operands[0].data);
+  int rd;
+  int rd_success = get_register_number(instruction->operands[0].data, &rd);
+  if (rd_success < 0) {
+    return -1;
+  }
   if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
@@ -131,7 +157,11 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
             instruction->line_number);
     return -1;
   }
-  int rn = get_register_number(instruction->operands[1].data);
+  int rn;
+  int rn_success = get_register_number(instruction->operands[1].data, &rn);
+  if (rn_success < 0) {
+    return -1;
+  }
   if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
@@ -145,7 +175,12 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
   if (instruction->operands[1].has_offset > 0) {
     if (instruction->operands[1].offset_type == OPERAND_REGISTER) {
       imm_bit = 0;
-      int rm = get_register_number(instruction->operands[1].offset);
+      int rm;
+      int rm_success =
+          get_register_number(instruction->operands[0].offset, &rm);
+      if (rm_success < 0) {
+        return -1;
+      }
       if (rm < 0) {
         fprintf(stderr,
                 "Failure on Line %d during Generation : Invalid Auxiliary "
@@ -156,7 +191,12 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
       src2 = rm;
     } else if (instruction->operands[1].offset_type == OPERAND_NUMBER) {
       imm_bit = 1;
-      src2 = get_immediate_value(instruction->operands[1].offset) & 0xFFFF;
+      int src2_success =
+          get_immediate_value(instruction->operands[1].offset, &src2) & 0xFFFF;
+
+      if (src2_success < 0) {
+        return -1;
+      }
     } else {
       fprintf(
           stderr,
@@ -168,8 +208,12 @@ uint32_t encode_load_instruction(int opcode, ParsedInstruction *instruction) {
   return pack_instruction(opcode, rd, rn, imm_bit, src2);
 }
 uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
-  int rd = get_register_number(instruction->operands[0].data);
 
+  int rd;
+  int rd_success = get_register_number(instruction->operands[0].data, &rd);
+  if (rd_success < 0) {
+    return -1;
+  }
   if (rd < 0 || rd > 31) {
 
     fprintf(stderr,
@@ -178,7 +222,11 @@ uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
             instruction->line_number);
     return -1;
   }
-  int rn = get_register_number(instruction->operands[1].data);
+  int rn;
+  int rn_success = get_register_number(instruction->operands[1].data, &rn);
+  if (rn_success < 0) {
+    return -1;
+  }
   if (rn < 0 || rn > 31) {
 
     fprintf(stderr,
@@ -192,7 +240,12 @@ uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
   if (instruction->operands[0].has_offset > 0) {
     if (instruction->operands[0].offset_type == OPERAND_REGISTER) {
       imm_bit = 0;
-      int rm = get_register_number(instruction->operands[0].offset);
+      int rm;
+      int rm_success =
+          get_register_number(instruction->operands[0].offset, &rm);
+      if (rm_success < 0) {
+        return -1;
+      }
       if (rm < 0) {
         fprintf(stderr,
                 "Failure on Line %d during Generation : Invalid Auxiliary "
@@ -203,12 +256,16 @@ uint32_t encode_store_instruction(int opcode, ParsedInstruction *instruction) {
       src2 = rm;
     } else if (instruction->operands[0].offset_type == OPERAND_NUMBER) {
       imm_bit = 1;
-      src2 = get_immediate_value(instruction->operands[0].offset) & 0xFFFF;
+      int src2_success =
+          get_immediate_value(instruction->operands[0].offset, &src2) & 0xFFFF;
+      if (src2_success < 0) {
+        return -1;
+      }
     } else {
-      fprintf(
-          stderr,
-          "Failure on Line %d during Generation : Invalid Auxiliary Source \n",
-          instruction->line_number);
+      fprintf(stderr,
+              "Failure on Line %d during Generation : Invalid Auxiliary "
+              "Source \n",
+              instruction->line_number);
       return -1;
     }
   }
@@ -222,7 +279,12 @@ uint32_t encode_jump_instruction(int opcode, ParsedInstruction *instruction) {
   int src2 = -1;
   if (instruction->operands[0].operand_type == OPERAND_NUMBER) {
     imm_bit = 1;
-    int address = get_immediate_value(instruction->operands[0].data);
+    int address;
+    int address_success =
+        get_immediate_value(instruction->operands[0].data, &address);
+    if (address_success < 0) {
+      return -1;
+    }
     if (address < 0) {
       fprintf(stderr, "Negative Label Address\n");
       return -1;
@@ -234,7 +296,12 @@ uint32_t encode_jump_instruction(int opcode, ParsedInstruction *instruction) {
     src2 = address & 0xFFFF;
   } else if (instruction->operands[0].operand_type == OPERAND_REGISTER) {
     imm_bit = 0;
-    int address = get_register_number(instruction->operands[0].data);
+    int address;
+    int address_success =
+        get_immediate_value(instruction->operands[0].data, &address);
+    if (address_success < 0) {
+      return -1;
+    }
     if (address < 0) {
       fprintf(stderr, "Negative Label Address\n");
       return -1;
@@ -249,7 +316,11 @@ uint32_t encode_jump_instruction(int opcode, ParsedInstruction *instruction) {
 }
 
 uint32_t encode_io_instruction(int opcode, ParsedInstruction *instruction) {
-  int rd = get_register_number(instruction->operands[0].data);
+  int rd;
+  int rd_success = get_register_number(instruction->operands[0].data, &rd);
+  if (rd_success < 0) {
+    return -1;
+  }
 
   if (rd < 0 || rd > 32) {
 
@@ -300,7 +371,7 @@ int generate_hexadecimal_file(ParsedInstruction *instructions, int count,
   for (int i = 0; i < count; i++) {
     uint32_t encoded = encode_instruction(&instructions[i]);
 
-    if (encoded == 0xFFFFFFFF) {
+    if (encoded < 0) {
       fprintf(stderr, "Failure Encoding at Line %d\n",
               instructions[i].line_number);
       fclose(file_ptr);

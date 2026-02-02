@@ -4,8 +4,8 @@
 #include <stdint.h>
 
 int get_opcode(char *operation_name);
-int get_register_number(char *register_name);
-int get_immediate_value(char *immediate);
+int get_register_number(char *register_name, int *out);
+int get_immediate_value(char *immediate, int *out);
 uint32_t encode_instruction(ParsedInstruction *instruction);
 uint32_t encode_arithmetic_instruction(int opcode,
                                        ParsedInstruction *instruction);

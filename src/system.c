@@ -49,8 +49,6 @@ int first_pass(char **data, int line_count, Token **tokens, int *tokens_count,
     }
     tokens_count[i] = token_count;
     if (token_count > 0 && tokens[i][0].token_type == TOKEN_LABEL) {
-      printf("DEBUG: Adding label '%s' at address %d\n", tokens[i][0].data,
-             curr_address);
       strcpy(symbol_table->entries[symbol_table->count].data,
              tokens[i][0].data);
       symbol_table->entries[symbol_table->count++].address = curr_address;
@@ -101,7 +99,6 @@ int second_pass(int line_count, Token **tokens, int *token_count,
                 identifier_address);
       }
     }
-    print_parsed_instruction(&parsedInstrucions[instruction_count]);
     instruction_count++;
   }
   *instruction_count_out = instruction_count;
